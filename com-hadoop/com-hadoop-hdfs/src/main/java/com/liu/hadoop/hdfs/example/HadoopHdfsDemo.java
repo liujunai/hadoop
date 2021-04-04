@@ -1,11 +1,13 @@
 package com.liu.hadoop.hdfs.example;
 
 import org.apache.hadoop.fs.*;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URISyntaxException;
 
 public class HadoopHdfsDemo
 {
@@ -13,7 +15,7 @@ public class HadoopHdfsDemo
      * 创建文件夹 mkdir
      */
     @Test
-    public void mkdir(){
+    public void mkdir() throws URISyntaxException, InterruptedException {
         Path path = new Path("/liuDemo");
 
         try
@@ -36,7 +38,7 @@ public class HadoopHdfsDemo
      * 新建文件
      */
     @Test
-    public void write(){
+    public void write() throws URISyntaxException, InterruptedException {
         Path path = new Path("/liutest.txt");
         try
         {
@@ -60,7 +62,7 @@ public class HadoopHdfsDemo
      * 查看HDFS上的文件内容
      */
     @Test
-    public void read(){
+    public void read() throws URISyntaxException, InterruptedException {
         Path path = new Path("/liutest.txt");
         try
         {
@@ -93,7 +95,7 @@ public class HadoopHdfsDemo
      * 上传文件到HDFS
      */
     @Test
-    public void upload(){
+    public void upload() throws URISyntaxException, InterruptedException {
         try
         {
             FileSystem fs = HadoopHdfsRes.Before();
@@ -109,7 +111,7 @@ public class HadoopHdfsDemo
      * 文件重命名
      */
     @Test
-    public void rename(){
+    public void rename() throws URISyntaxException, InterruptedException {
         Path path1 = new Path("/liutest/upload.txt");
         Path path2 = new Path("/liutest/rename.txt");
         try
@@ -133,7 +135,7 @@ public class HadoopHdfsDemo
      * 从HDFS下载文件
      */
     @Test
-    public void download(){
+    public void download() throws URISyntaxException, InterruptedException {
         Path path = new Path("/liutest/rename.txt");
         try
         {
@@ -154,7 +156,7 @@ public class HadoopHdfsDemo
      * 查询某目录下所有文件 ls
      */
     @Test
-    public void query(){
+    public void query() throws URISyntaxException, InterruptedException {
         Path path = new Path("/");
         try
         {
@@ -178,7 +180,7 @@ public class HadoopHdfsDemo
      * 删除文件
      */
     @Test
-    public void delete(){
+    public void delete() throws URISyntaxException, InterruptedException {
         try
         {
             FileSystem fs = HadoopHdfsRes.Before();
