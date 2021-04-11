@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+
+	<!-- Hbase 在hdfs上的存储路径 -->
+	<property>
+		<name>hbase.rootdir</name>
+		<value>hdfs://liu1:8020/Hbase</value>
+	</property>
+	<!-- 是否打开分布式 -->
+	<property>
+		<name>hbase.cluster.distributed</name>
+		<value>true</value>
+	</property>
+	<!-- 使用zookeeper的地址 -->
+	<property>
+		<name>hbase.zookeeper.quorum</name>
+		<value>liu1,liu2,liu3</value>
+	</property>
+	<!-- 0.98 后的新变动，之前版本没有.port,默认端口为 60000 -->
+	<property>
+		<name>hbase.master.port</name>
+		<value>16000</value>
+	</property>
+	<!-- zookeeper的存储目录 -->
+	<property>
+		<name>hbase.zookeeper.property.dataDir</name>
+		<value>/opt/module/zookeeper-3.6.2/zkData</value>
+	</property>
+
+	<!-- 启动时集群之间最大时间间隔 -->
+	<property>
+		<name>hbase.master.maxclockskew</name>
+		<value>180000</value>
+		<description>Time difference of regionserver from master</description>
+	</property>
+
+
+</configuration>

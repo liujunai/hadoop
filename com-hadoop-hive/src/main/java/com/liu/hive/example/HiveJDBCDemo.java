@@ -10,7 +10,7 @@ import java.sql.*;
 public class HiveJDBCDemo {
 
     private static String driverName = "org.apache.hive.jdbc.HiveDriver";
-    private static String url = "jdbc:hive2://192.168.122.55:10000/liudemo";
+    private static String url = "jdbc:hive2://192.168.122.51:10000/liu";
     private static String user = "liu";
     private static String password = "a";
 
