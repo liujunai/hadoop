@@ -1,0 +1,7 @@
+work hadoop
+work hive
+work zookeeper
+work kafka
+work spark
+work flume
+work sqoop

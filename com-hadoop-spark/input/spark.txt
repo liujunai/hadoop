@@ -1,0 +1,4 @@
+hadoop hive spark flume
+hdfs spark zookeeper storm
+flume hue flume hdfs
+spark hive hdfs spark

@@ -1,0 +1,7 @@
+hello hadoop
+hello hive
+hello zookeeper
+hello kafka
+hello spark
+hello flume
+hello sqoop
