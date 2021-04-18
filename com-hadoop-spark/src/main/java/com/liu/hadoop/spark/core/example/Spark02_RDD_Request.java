@@ -6,12 +6,12 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
 import scala.Tuple3;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -20,7 +20,7 @@ import java.util.List;
  * @date 2021/4/13 下午7:45
  * @description: RDD  统计案例
  */
-public class Spark01_RDD_Request {
+public class Spark02_RDD_Request {
 
 	public static void main(String[] args) {
 
@@ -30,6 +30,10 @@ public class Spark01_RDD_Request {
 
 		//2.从文件中创建RDD，将文件中的数据作为处理的数据源
 		JavaRDD<String> rdd = jsc.textFile("/home/liu/workspace/intellij_work/intellij_20201211/com-hadoop-spark/input/user_visit_action.txt");
+
+		// Q : actionRDD重复使用
+		// Q : cogroup性能可能较低
+		rdd.cache();
 
 		//3.统计品类的点击数量：（品类ID，点击数量）
 		JavaRDD<String> clickActionRDD = rdd.filter(new Function<String, Boolean>() {
@@ -85,51 +89,40 @@ public class Spark01_RDD_Request {
 		//    点击数量排序，下单数量排序，支付数量排序
 		//    元组排序：先比较第一个，再比较第二个，再比较第三个，依此类推
 		//    ( 品类ID, ( 点击数量, 下单数量, 支付数量 ) )
-		JavaPairRDD<String, Tuple3<Iterable<Integer>, Iterable<Integer>, Iterable<Integer>>> cogroupRDD =
-				clickCountRDD.cogroup(orderCountRDD, payCountRDD);
-
-		JavaPairRDD<String, Tuple3<Integer, Integer, Integer>> analysisRDD = cogroupRDD.mapValues(new Function<
-				Tuple3<Iterable<Integer>, Iterable<Integer>, Iterable<Integer>>, Tuple3<Integer, Integer, Integer>>() {
+		JavaPairRDD<String, Tuple3<Integer, Integer, Integer>> rdd1 = clickCountRDD.mapToPair(new PairFunction<Tuple2<String, Integer>, String, Tuple3<Integer, Integer, Integer>>() {
 			@Override
-			public Tuple3<Integer, Integer, Integer> call(Tuple3<Iterable<Integer>, Iterable<Integer>, Iterable<Integer>> v1) throws Exception {
-				Iterator<Integer> i1 = v1._1().iterator();
-				Integer r1 = 0;
-				if (i1.hasNext()){
-					r1 = i1.next();
-				}
-
-				Iterator<Integer> i2 = v1._2().iterator();
-				Integer r2 = 0;
-				if (i2.hasNext()){
-					r2 = i2.next();
-				}
-
-				Iterator<Integer> i3 = v1._3().iterator();
-				Integer r3 = 0;
-				if (i3.hasNext()){
-					r3 = i3.next();
-				}
-
-
-				return new Tuple3<>(r1,r2,r3);
+			public Tuple2<String, Tuple3<Integer, Integer, Integer>> call(Tuple2<String, Integer> v1) throws Exception {
+				return new Tuple2<>(v1._1(), new Tuple3<>(v1._2(), 0, 0));
+			}
+		});
+		JavaPairRDD<String, Tuple3<Integer, Integer, Integer>> rdd2 = orderCountRDD.mapToPair(new PairFunction<Tuple2<String, Integer>, String, Tuple3<Integer, Integer, Integer>>() {
+			@Override
+			public Tuple2<String, Tuple3<Integer, Integer, Integer>> call(Tuple2<String, Integer> v1) throws Exception {
+				return new Tuple2<>(v1._1(), new Tuple3<>(0, v1._2(), 0));
+			}
+		});
+		JavaPairRDD<String, Tuple3<Integer, Integer, Integer>> rdd3 = payCountRDD.mapToPair(new PairFunction<Tuple2<String, Integer>, String, Tuple3<Integer, Integer, Integer>>() {
+			@Override
+			public Tuple2<String, Tuple3<Integer, Integer, Integer>> call(Tuple2<String, Integer> v1) throws Exception {
+				return new Tuple2<>(v1._1(), new Tuple3<>(0, 0, v1._2()));
 			}
 		});
 
-		// JavaPairRDD排序方法，都是按key进行操作的。sortByKey()5个方法，包括自定义Comparator的，都是按照Key来排序
-		// 既然能按key排序，那何不把value看成key。于是将元组的key value交换一下顺序，然后在调用sortByKey()
-		JavaPairRDD<Tuple3<Integer, Integer, Integer>, String> tuple3RDD = analysisRDD.mapToPair(new PairFunction<Tuple2<String, Tuple3<Integer, Integer, Integer>>, Tuple3<Integer, Integer, Integer>, String>() {
+		// 7. 将三个数据源合并在一起，统一进行聚合计算
+		JavaPairRDD<String, Tuple3<Integer, Integer, Integer>> union = rdd1.union(rdd2).union(rdd3);
+
+		JavaPairRDD<String, Tuple3<Integer, Integer, Integer>> soruceRDD = union.reduceByKey(new Function2<Tuple3<Integer, Integer, Integer>, Tuple3<Integer, Integer, Integer>, Tuple3<Integer, Integer, Integer>>() {
 			@Override
-			public Tuple2<Tuple3<Integer, Integer, Integer>, String> call(Tuple2<String, Tuple3<Integer, Integer, Integer>> v1) throws Exception {
-				return new Tuple2<>(v1._2(), v1._1());
+			public Tuple3<Integer, Integer, Integer> call(Tuple3<Integer, Integer, Integer> v1, Tuple3<Integer, Integer, Integer> v2) throws Exception {
+				return new Tuple3<>(v1._1() + v2._1(), v1._2() + v2._2(), v1._3() + v2._3());
 			}
 		});
 
 		// scala.Tuple3 cannot be cast to java.lang.Comparable   元组类型无法排序  暂时停下
-		List<Tuple2<Tuple3<Integer, Integer, Integer>, String>> take = tuple3RDD.sortByKey(false).take(10);
-
+		List<Tuple2<String, Tuple3<Integer, Integer, Integer>>> resultRDD = soruceRDD.sortByKey(false).take(10);
 
 		//7.执行任务
-		take.forEach(x -> System.out.println("x = " + x));
+		resultRDD.forEach(x -> System.out.println("x = " + x));
 
 		//4.输出结果
 
