@@ -1,11 +1,13 @@
 package com.liu.hadoop.spark.sql.basic;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.hbase.mapreduce.TableInputFormat;
 import org.apache.spark.SparkConf;
-import org.apache.spark.sql.AnalysisException;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SparkSession;
-
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.hadoop.hbase.client.Result;
 
 /**
  * @author LiuJunFeng
@@ -14,21 +16,27 @@ import org.apache.spark.sql.SparkSession;
  */
 public class Spark06_SparkSQL_Hbase {
 
-	public static void main(String[] args) throws AnalysisException {
+	public static void main(String[] args){
 
-		SparkConf conf = new SparkConf().setMaster("local[*]").setAppName("sparkSql");
-		SparkSession spark = SparkSession.builder()
-				.enableHiveSupport() //启用Hive的支持
-				.config("hive.metastore.uris", "thrift://192.168.122.51:9083") // 要连接的 Hive 启动元数据服务
-				// 在开发工具中创建数据库默认是在本地仓库，通过参数修改数据库仓库的地址:
-				.config("spark.sql.warehouse.dir", "hdfs://liu1:8020/user/hive/warehouse")
-				.config(conf).getOrCreate();
+		// spark 的运行环境
+		SparkConf sparkConf = new SparkConf().setMaster("local[*]").setAppName("spark on hbase");
+		JavaSparkContext jsc = new JavaSparkContext(sparkConf);
 
-		// 选择使用的库
-		spark.sql("use liu");
+		// hbase 的运行环境
+		String tablename = "liu";
+		Configuration hbaseConf = HBaseConfiguration.create();
+		//设置zooKeeper集群地址，也可以通过将hbase-site.xml导入classpath，但是建议在程序里这样设置
+		hbaseConf.set("hbase.zookeeper.quorum","192.168.122.51,192.168.122.52,192.168.122.53");
+		//设置zookeeper连接端口，默认2181
+		hbaseConf.set("hbase.zookeeper.property.clientPort", "2181");
+		hbaseConf.set(TableInputFormat.INPUT_TABLE, tablename);
+
+		//读取数据并转化成rdd
+		JavaPairRDD<ImmutableBytesWritable, Result> hbaseRdd = jsc.newAPIHadoopRDD(hbaseConf, TableInputFormat.class, ImmutableBytesWritable.class, Result.class);
+
+		System.out.println("hbaseRdd.count() = " + hbaseRdd.count());
 
 
-		spark.close();
 	}
 
 }
