@@ -11,7 +11,7 @@ import java.util.Arrays;
  * @date 2021/1/5 下午6:28
  * @description: 从集合中读取数据
  */
-public class SourceCollection {
+public class Flink01_Source_Collection {
 
 	public static void main(String[] args) {
 

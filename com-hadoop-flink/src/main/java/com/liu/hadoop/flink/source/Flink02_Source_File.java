@@ -8,7 +8,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
  * @date 2021/1/6 下午5:03
  * @description: 从文件中读取数据
  */
-public class SourceFile {
+public class Flink02_Source_File {
 
 	public static void main(String[] args) {
 
@@ -18,7 +18,7 @@ public class SourceFile {
 		env.setParallelism(1);
 
 		//从文件中读取数据
-		DataStream<String> dataStream = env.readTextFile("./src/main/resources/sensor.txt");
+		DataStream<String> dataStream = env.readTextFile("/home/liu/workspace/intellij_work/intellij_20201211/com-hadoop-flink/data/sensor.txt");
 
 		//输出数据
 		dataStream.print("文件输出");

@@ -15,15 +15,13 @@ import java.util.Random;
  * @date 2021/1/6 下午5:43
  * @description: 自定义数据来源
  */
-public class SourceCustom {
+public class Flink04_Source_Custom {
 
 
 	public static void main(String[] args) {
 
 		//创建执行环境
 		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-
-		env.setParallelism(1);
 
 		//自定义数据来源
 		DataStream<Sensor> dataStream = env.addSource(new MySource());
